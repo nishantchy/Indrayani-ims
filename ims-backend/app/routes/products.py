@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, status, Query, Body
 from typing import List, Optional
 from ..schemas.products import (
     ProductCreate, ProductUpdate, ProductResponse, 
-    ProductStatus, StockUpdate
+    ProductStatus, StockUpdate, SaleCreate, SaleResponse
 )
 from ..models.products import ProductModel
 from ..db.mongodb import get_database
@@ -191,6 +191,7 @@ async def create_product(product: ProductCreate):
             "dealer_price": product.dealer_price,
             "stock": product.initial_stock,
             "total_stock_received": product.initial_stock,
+            "total_sales": 0,
             "status": ProductStatus.IN_STOCK if product.initial_stock > 0 else ProductStatus.OUT_OF_STOCK,
             "description": product.description,
             "image_id": product.image_id,
@@ -199,6 +200,7 @@ async def create_product(product: ProductCreate):
                 "date": current_time,
                 "notes": product.stock_notes
             }] if product.initial_stock > 0 else [],
+            "sales_history": [],
             "first_added_date": current_time,
             "last_updated_date": current_time,
             "created_at": current_time,
@@ -550,6 +552,89 @@ async def delete_product(slug: str):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to delete product"
         )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"An unexpected error occurred: {str(e)}"
+        )
+
+@router.post("/{slug}/sell", response_model=ProductResponse)
+async def record_sale(slug: str, sale: SaleCreate):
+    """
+    Record a sale for a product, which will:
+    1. Decrease the stock by the sold quantity
+    2. Increase total_sales counter
+    3. Add a record to sales_history
+    
+    Example request body:
+    ```json
+    {
+        "quantity": 1,
+        "sale_price": 55000.00,
+        "notes": "Sold to walk-in customer"
+    }
+    ```
+    """
+    try:
+        db = await get_database()
+        
+        # Find existing product
+        existing_product = await db.products.find_one({"slug": slug})
+        if not existing_product:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Product not found"
+            )
+            
+        # Check if we have enough stock
+        if existing_product["stock"] < sale.quantity:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Insufficient stock. Available: {existing_product['stock']}, Requested: {sale.quantity}"
+            )
+            
+        current_time = datetime.now()
+        
+        # Update product with sale information
+        updated = await db.products.find_one_and_update(
+            {"slug": slug},
+            {
+                "$inc": {
+                    "stock": -sale.quantity,
+                    "total_sales": sale.quantity
+                },
+                "$push": {
+                    "sales_history": {
+                        "quantity": sale.quantity,
+                        "sale_price": sale.sale_price,
+                        "date": current_time,
+                        "notes": sale.notes
+                    }
+                },
+                "$set": {
+                    "status": ProductStatus.OUT_OF_STOCK if existing_product["stock"] - sale.quantity == 0 else ProductStatus.IN_STOCK,
+                    "updated_at": current_time
+                }
+            },
+            return_document=True
+        )
+        
+        if updated:
+            updated["_id"] = str(updated["_id"])
+            # Add image data
+            await enrich_product_with_media(db, updated)
+            # Invalidate cache
+            redis_client = await get_redis()
+            await invalidate_product_cache(redis_client, slug)
+            return updated
+            
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to record sale"
+        )
+        
     except HTTPException:
         raise
     except Exception as e:

@@ -16,6 +16,14 @@ class StockUpdateBase(BaseModel):
 class StockUpdateResponse(StockUpdateBase):
     date: datetime
 
+class SaleCreate(BaseModel):
+    quantity: int = Field(..., gt=0, description="Quantity sold (must be positive)")
+    sale_price: float = Field(..., gt=0, description="Price at which item was sold")
+    notes: Optional[str] = None
+
+class SaleResponse(SaleCreate):
+    date: datetime
+
 class ProductImage(BaseModel):
     image_id: str
     image_url: str
@@ -69,8 +77,10 @@ class ProductResponse(ProductBase):
     slug: str
     stock: int
     total_stock_received: int
+    total_sales: int
     status: ProductStatus
     stock_updates: List[StockUpdateResponse]
+    sales_history: List[SaleResponse]
     images: List[ProductImage] = []
 
     class Config:

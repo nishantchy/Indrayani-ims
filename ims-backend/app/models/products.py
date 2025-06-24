@@ -13,6 +13,12 @@ class StockUpdate(BaseModel):
     date: datetime = Field(default_factory=datetime.now)
     notes: Optional[str] = None
 
+class SaleRecord(BaseModel):
+    quantity: int = Field(..., gt=0)  # Must be positive
+    date: datetime = Field(default_factory=datetime.now)
+    sale_price: float = Field(..., gt=0)  # Price at which item was sold
+    notes: Optional[str] = None
+
 class ProductModel(BaseModel):
     id: str = Field(alias="_id")
     category_id: str
@@ -24,10 +30,12 @@ class ProductModel(BaseModel):
     dealer_price: float = Field(..., ge=0)  # Price in NPR, cannot be negative
     stock: int = Field(..., ge=0)  # Current stock, cannot be negative
     total_stock_received: int = Field(default=0, ge=0)  # Total stock ever received
+    total_sales: int = Field(default=0, ge=0)  # Total quantity sold
     status: ProductStatus = ProductStatus.OUT_OF_STOCK
     description: Optional[str] = None
     image_id: Optional[str] = None  # Reference to media_center _id
     stock_updates: List[StockUpdate] = []  # History of all stock updates
+    sales_history: List[SaleRecord] = []  # History of all sales
     first_added_date: datetime = Field(default_factory=datetime.now)
     last_updated_date: datetime = Field(default_factory=datetime.now)
     created_at: datetime = Field(default_factory=datetime.now)
