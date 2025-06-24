@@ -1,17 +1,48 @@
-import { Boxes } from "lucide-react";
+import {
+  LayoutDashboard,
+  Users,
+  Boxes,
+  Tags,
+  Image as ImageIcon,
+  BookText,
+} from "lucide-react";
 
 const sidelinks = [
   {
     id: 1,
-    title: "Inventory",
-    links: "/dashboard/inventory",
-    icons: Boxes,
+    title: "Dashboard",
+    links: "/dashboard",
+    icon: LayoutDashboard,
   },
   {
     id: 2,
-    title: "Add Item",
-    links: "/dashboard/add-item",
-    icons: Boxes,
+    title: "Dealers",
+    links: "/dealers",
+    icon: Users,
+  },
+  {
+    id: 3,
+    title: "Inventory",
+    links: "/inventory",
+    icon: Boxes,
+  },
+  {
+    id: 4,
+    title: "Categories",
+    links: "/categories",
+    icon: Tags,
+  },
+  {
+    id: 5,
+    title: "Media Center",
+    links: "/media-center",
+    icon: ImageIcon,
+  },
+  {
+    id: 6,
+    title: "Ledger",
+    links: "/ledger",
+    icon: BookText,
   },
 ];
 

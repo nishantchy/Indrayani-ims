@@ -1,8 +1,8 @@
 import Cookies from "js-cookie";
 
 const VALID_CREDENTIALS = {
-  username: process.env.NEXT_PUBLIC_ADMIN_USER || "sayana-home",
-  password: process.env.NEXT_PUBLIC_ADMIN_PASS || "password123",
+  username: process.env.NEXT_PUBLIC_ADMIN_USER,
+  password: process.env.NEXT_PUBLIC_ADMIN_PASS,
 };
 
 const AUTH_COOKIE_KEY = "auth";
