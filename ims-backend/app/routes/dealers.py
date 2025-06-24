@@ -1,62 +1,71 @@
 from fastapi import APIRouter, HTTPException, status, Query, Request, File, UploadFile, Form, Body
 from typing import List, Optional
-from ..schemas.dealers import DealerCreate, DealerUpdate, DealerResponse, DealerStatus
-from ..models.dealers import DealerModel, CloudinaryImage
+from ..schemas.dealers import DealerCreate, DealerUpdate, DealerResponse, DealerStatus, DealerImage
+from ..models.dealers import DealerModel
 from ..db.mongodb import get_database
 from ..db.redis import get_redis
 from datetime import datetime
 from bson import ObjectId
-import cloudinary
-import cloudinary.uploader
 from slugify import slugify
 import json
 import logging
 from ..core.config import settings
+from ..routes.media_center import create_media  # Import if needed for shared logic
+from ..schemas.media_center import MediaCenterResponse
+from ..models.media_center import MediaCenterModel
+from ..routes.media_center import router as media_center_router
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-# Configure Cloudinary
-cloudinary.config(
-    cloud_name=settings.CLOUDINARY_CLOUD_NAME,
-    api_key=settings.CLOUDINARY_API_KEY,
-    api_secret=settings.CLOUDINARY_API_SECRET
-)
-
 router = APIRouter(prefix="/api/dealers", tags=["dealers"])
-
-async def upload_to_cloudinary(file: UploadFile) -> CloudinaryImage:
-    try:
-        # Upload the file to cloudinary
-        result = cloudinary.uploader.upload(
-            file.file,
-            folder="dealers",  # Store in dealers folder
-            allowed_formats=["jpg", "png"],
-            max_file_size=5 * 1024 * 1024  # 5MB limit
-        )
-        
-        return CloudinaryImage(
-            url=result["secure_url"],
-            public_id=result["public_id"]
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Failed to upload image: {str(e)}"
-        )
-
-async def delete_from_cloudinary(public_id: str):
-    try:
-        cloudinary.uploader.destroy(public_id)
-    except Exception:
-        pass  # Ignore deletion errors
 
 async def invalidate_dealer_cache(redis_client, slug: str = None):
     """Invalidate dealer cache. If slug is provided, only invalidate that dealer's cache."""
     if slug:
         await redis_client.delete(f"dealer:{slug}")
     await redis_client.delete("dealers:list")
+
+async def validate_and_get_media(db, image_id: str):
+    """Validate image_id exists and return media details."""
+    if not image_id:
+        return None
+    try:
+        media = await db.media_center.find_one({"_id": ObjectId(image_id)})
+        if not media:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid image_id: Media not found"
+            )
+        return media
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid image_id format"
+        )
+
+async def enrich_dealer_with_media(db, dealer: dict):
+    """Add images array to dealer if image_id exists."""
+    if dealer and dealer.get("image_id"):
+        media = await validate_and_get_media(db, dealer["image_id"])
+        if media:
+            # Create images array with current image
+            dealer["images"] = [{
+                "image_id": str(media["_id"]),
+                "image_url": media["image_url"]
+            }]
+        else:
+            dealer["images"] = []
+    else:
+        dealer["images"] = []
+    return dealer
+
+async def enrich_dealers_with_media(db, dealers: list):
+    """Add images array to multiple dealers if they have image_id."""
+    for dealer in dealers:
+        await enrich_dealer_with_media(db, dealer)
+    return dealers
 
 @router.post("/", response_model=DealerResponse, status_code=status.HTTP_201_CREATED)
 async def create_dealer(
@@ -68,10 +77,15 @@ async def create_dealer(
     gst_number: Optional[str] = Form(None),
     dealer_status: Optional[DealerStatus] = Form(DealerStatus.ACTIVE),
     notes: Optional[str] = Form(None),
-    image: Optional[UploadFile] = File(None)
+    image_id: Optional[str] = Form(None)
 ):
     try:
         db = await get_database()
+        
+        # Validate image_id if provided
+        if image_id:
+            await validate_and_get_media(db, image_id)
+            
         last_dealer = await db.dealers.find_one(sort=[("dealer_code", -1)])
         if last_dealer:
             last_number = int(last_dealer["dealer_code"].split("DLR")[-1])
@@ -97,29 +111,16 @@ async def create_dealer(
             "dealer_code": dealer_code,
             "slug": slug,
             "created_at": datetime.now(),
-            "updated_at": datetime.now()
+            "updated_at": datetime.now(),
+            "image_id": image_id
         }
-        if image and image.filename:
-            if image.content_type not in ["image/jpeg", "image/png"]:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Only JPEG and PNG images are allowed"
-                )
-            content = await image.read()
-            file_size = len(content)
-            if file_size > 5 * 1024 * 1024:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="File size exceeds 5MB limit"
-                )
-            await image.seek(0)
-            cloudinary_image = await upload_to_cloudinary(image)
-            dealer_dict["image"] = cloudinary_image.model_dump()
         result = await db.dealers.insert_one(dealer_dict)
         if result.inserted_id:
             dealer = await db.dealers.find_one({"_id": result.inserted_id})
             if dealer:
                 dealer["_id"] = str(dealer["_id"])
+                # Add image_url to response
+                await enrich_dealer_with_media(db, dealer)
                 redis_client = await get_redis()
                 await invalidate_dealer_cache(redis_client)
                 return dealer
@@ -164,6 +165,8 @@ async def get_dealers(
     for dealer in dealers:
         if dealer.get("_id"):
             dealer["_id"] = str(dealer["_id"])
+    # Add image_url to all dealers
+    await enrich_dealers_with_media(db, dealers)
     return dealers
 
 @router.get("/{slug}", response_model=DealerResponse)
@@ -176,6 +179,9 @@ async def get_dealer(slug: str):
             dealer = json.loads(cached_dealer)
             if dealer.get("_id"):
                 dealer["_id"] = str(dealer["_id"])
+            # Add image_url to cached dealer
+            db = await get_database()
+            await enrich_dealer_with_media(db, dealer)
             return dealer
     except Exception as e:
         pass
@@ -188,6 +194,8 @@ async def get_dealer(slug: str):
         )
     if dealer.get("_id"):
         dealer["_id"] = str(dealer["_id"])
+    # Add image_url before caching and returning
+    await enrich_dealer_with_media(db, dealer)
     try:
         await redis_client.set(
             cache_key,
@@ -209,7 +217,7 @@ async def update_dealer(
     gst_number: Optional[str] = Form(None),
     dealer_status: Optional[DealerStatus] = Form(None),
     notes: Optional[str] = Form(None),
-    image: Optional[UploadFile] = File(None)
+    image_id: Optional[str] = Form(None)
 ):
     try:
         db = await get_database()
@@ -219,6 +227,11 @@ async def update_dealer(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Dealer not found"
             )
+            
+        # Validate image_id if provided
+        if image_id:
+            await validate_and_get_media(db, image_id)
+            
         update_data = {}
         if company_name is not None:
             update_data["company_name"] = company_name
@@ -236,6 +249,8 @@ async def update_dealer(
             update_data["status"] = dealer_status
         if notes is not None:
             update_data["notes"] = notes
+        if image_id is not None:
+            update_data["image_id"] = image_id
         if company_name is not None:
             new_slug = slugify(company_name)
             if new_slug != slug:
@@ -245,33 +260,25 @@ async def update_dealer(
                     temp_slug = f"{new_slug}-{counter}"
                     counter += 1
                 update_data["slug"] = temp_slug
-        if image and image.filename:
-            if image.content_type not in ["image/jpeg", "image/png"]:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Only JPEG and PNG images are allowed"
-                )
-            if existing_dealer.get("image", {}).get("public_id"):
-                await delete_from_cloudinary(existing_dealer["image"]["public_id"])
-            cloudinary_image = await upload_to_cloudinary(image)
-            update_data["image"] = cloudinary_image.model_dump()
-        update_data["updated_at"] = datetime.now()
-        updated_dealer = await db.dealers.find_one_and_update(
-            {"slug": slug},
-            {"$set": update_data},
-            return_document=True
-        )
-        if updated_dealer and updated_dealer.get("_id"):
-            updated_dealer["_id"] = str(updated_dealer["_id"])
-        if updated_dealer:
-            redis_client = await get_redis()
-            await invalidate_dealer_cache(redis_client, slug)
-            if "slug" in update_data:
-                await invalidate_dealer_cache(redis_client, update_data["slug"])
-            return updated_dealer
+        if update_data:
+            update_data["updated_at"] = datetime.now()
+            updated = await db.dealers.find_one_and_update(
+                {"slug": slug},
+                {"$set": update_data},
+                return_document=True
+            )
+            if updated:
+                updated["_id"] = str(updated["_id"])
+                # Add image_url to response
+                await enrich_dealer_with_media(db, updated)
+                redis_client = await get_redis()
+                await invalidate_dealer_cache(redis_client, slug)
+                if "slug" in update_data:
+                    await invalidate_dealer_cache(redis_client, update_data["slug"])
+                return updated
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Dealer not found"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No fields to update"
         )
     except HTTPException:
         raise
@@ -292,10 +299,6 @@ async def delete_dealer(slug: str):
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Dealer not found"
         )
-    
-    # Delete image from Cloudinary if exists
-    if dealer.get("image", {}).get("public_id"):
-        await delete_from_cloudinary(dealer["image"]["public_id"])
     
     # Delete dealer from database
     result = await db.dealers.delete_one({"slug": slug})

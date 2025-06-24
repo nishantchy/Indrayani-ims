@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 from pydantic import BaseModel, Field, EmailStr
 from enum import Enum
@@ -7,6 +7,10 @@ from fastapi import UploadFile, File
 class DealerStatus(str, Enum):
     ACTIVE = "active"
     INACTIVE = "inactive"
+
+class DealerImage(BaseModel):
+    image_id: str
+    image_url: str
 
 class DealerBase(BaseModel):
     company_name: str = Field(..., min_length=1, max_length=100)
@@ -17,6 +21,7 @@ class DealerBase(BaseModel):
     gst_number: Optional[str] = Field(None, max_length=15)
     status: DealerStatus = DealerStatus.ACTIVE
     notes: Optional[str] = None
+    image_id: Optional[str] = None  # Reference to media_center _id (for input)
 
 class DealerCreate(DealerBase):
     pass
@@ -30,18 +35,15 @@ class DealerUpdate(BaseModel):
     gst_number: Optional[str] = Field(None, max_length=15)
     status: Optional[DealerStatus] = None
     notes: Optional[str] = None
-
-class CloudinaryImageResponse(BaseModel):
-    url: str
-    public_id: str
+    image_id: Optional[str] = None
 
 class DealerResponse(DealerBase):
     id: str = Field(..., alias="_id")
     dealer_code: str
     slug: str
-    image: Optional[CloudinaryImageResponse] = None
     created_at: datetime
     updated_at: datetime
+    images: List[DealerImage] = []  # Array of images in response
 
     class Config:
         populate_by_name = True

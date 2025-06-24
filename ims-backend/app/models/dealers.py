@@ -7,11 +7,7 @@ class Address(BaseModel):
     city: Optional[str] = None
     state: Optional[str] = None
     pincode: Optional[str] = None
-    country: str = "India"
-
-class CloudinaryImage(BaseModel):
-    url: str
-    public_id: str
+    country: str = "Nepal"
 
 class DealerModel(BaseModel):
     id: str = Field(alias="_id")
@@ -22,7 +18,7 @@ class DealerModel(BaseModel):
     phone: str
     email: Optional[str] = None
     address: Optional[str] = None
-    image: Optional[CloudinaryImage] = None
+    image_id: Optional[str] = None  
     gst_number: Optional[str] = None
     status: str = "active"  # active, inactive
     created_at: datetime = Field(default_factory=datetime.now)
