@@ -1,0 +1,12 @@
+venv/
+__pycache__/
+.git/
+.pytest_cache/
+*.pyc
+*.pyo
+*.pyd
+.mypy_cache/
+.DS_Store
+test_output.txt
+assets/
+.env

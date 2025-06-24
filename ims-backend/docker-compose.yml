@@ -1,0 +1,25 @@
+version: "3.8"
+services:
+  app:
+    build: .
+    container_name: ims-backend-app
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGODB_URL=mongodb://mongo:27017/inventory_db
+    secrets:
+      - mongodb_url
+    depends_on:
+      - mongo
+  mongo:
+    image: mongo:6.0
+    container_name: ims-backend-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+volumes:
+  mongo_data:
+secrets:
+  mongodb_url:
+    file: ./secrets/mongodb_url
