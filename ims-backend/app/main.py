@@ -9,7 +9,7 @@ import logging
 from .db.mongodb import connect_to_mongo, close_mongo_connection
 from .db.redis import connect_to_redis, close_redis_connection
 from .core.config import settings
-from .routes import dealers, categories, media_center, products, party_ledger
+from .routes import dealers, categories, media_center, products, party_ledger, dashboard, reports
 
 # WARNING
 logging.basicConfig(level=logging.WARNING)
@@ -51,6 +51,8 @@ app.include_router(categories.router)
 app.include_router(media_center.router)
 app.include_router(products.router)
 app.include_router(party_ledger.router)
+app.include_router(dashboard.router)
+app.include_router(reports.router)
 
 @app.get("/")
 @limiter.limit(f"{settings.RATE_LIMIT_PER_MINUTE}/minute")

@@ -12,7 +12,11 @@ router = APIRouter(prefix="/api/party-ledger", tags=["party_ledger"])
 async def create_ledger(entry: PartyLedgerCreate):
     db = await get_database()
     # Validate dealer_id
-    dealer = await db.dealers.find_one({"_id": ObjectId(entry.dealer_id)})
+    try:
+        dealer_obj_id = ObjectId(entry.dealer_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid dealer_id format. Must be a 24-character hex string.")
+    dealer = await db.dealers.find_one({"_id": dealer_obj_id})
     if not dealer:
         raise HTTPException(status_code=400, detail="Dealer not found")
     now = datetime.now()
