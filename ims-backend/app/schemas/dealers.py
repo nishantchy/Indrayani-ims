@@ -19,7 +19,7 @@ class DealerBase(BaseModel):
     email: Optional[EmailStr] = None
     address: Optional[str] = None
     gst_number: Optional[str] = Field(None, max_length=15)
-    status: DealerStatus = DealerStatus.ACTIVE
+    dealer_status: DealerStatus = DealerStatus.ACTIVE
     notes: Optional[str] = None
     image_id: Optional[str] = None  # Reference to media_center _id (for input)
 

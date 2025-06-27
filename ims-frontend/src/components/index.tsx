@@ -6,6 +6,8 @@ import Loader from "./common/Loader";
 import DealersDialogHandle from "./dealers/dialog-handle";
 import DisplayMedia from "./media-center/DisplayMedia";
 import AddMediaDialog from "./media-center/AddMedia";
+import TotalDealers from "./dealers/TotalDealers";
+import UpdateDealer from "./dealers/dealer-update";
 
 export {
   LoginCard,
@@ -16,4 +18,6 @@ export {
   DealersDialogHandle,
   DisplayMedia,
   AddMediaDialog,
+  TotalDealers,
+  UpdateDealer,
 };

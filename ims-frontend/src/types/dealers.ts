@@ -15,7 +15,7 @@ export interface Dealer {
   email?: string;
   address?: string;
   gst_number?: string;
-  status: DealerStatus;
+  dealer_status: DealerStatus;
   notes?: string;
   image_id?: string;
   created_at: string;

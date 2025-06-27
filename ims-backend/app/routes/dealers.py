@@ -106,7 +106,7 @@ async def create_dealer(
             "email": email,
             "address": address,
             "gst_number": gst_number,
-            "status": dealer_status,
+            "dealer_status": dealer_status,
             "notes": notes,
             "dealer_code": dealer_code,
             "slug": slug,
@@ -151,7 +151,7 @@ async def get_dealers(
     db = await get_database()
     query = {}
     if status_filter:
-        query["status"] = status_filter
+        query["dealer_status"] = status_filter
     if search:
         query["$or"] = [
             {"company_name": {"$regex": search, "$options": "i"}},
@@ -246,7 +246,7 @@ async def update_dealer(
         if gst_number is not None:
             update_data["gst_number"] = gst_number
         if dealer_status is not None:
-            update_data["status"] = dealer_status
+            update_data["dealer_status"] = dealer_status
         if notes is not None:
             update_data["notes"] = notes
         if image_id is not None:

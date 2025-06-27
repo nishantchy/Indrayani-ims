@@ -26,7 +26,7 @@ interface DealerForm {
   email?: string;
   address?: string;
   gst_number?: string;
-  status: "active" | "inactive";
+  dealer_status: "active" | "inactive";
   notes?: string;
   image_id?: string;
 }
@@ -46,7 +46,7 @@ export default function DealersDialogHandle() {
     reset,
   } = useForm<DealerForm>({
     defaultValues: {
-      status: "active",
+      dealer_status: "active",
     },
   });
 
@@ -63,7 +63,7 @@ export default function DealersDialogHandle() {
       const formData = new FormData();
       formData.append("company_name", data.company_name);
       formData.append("phone", data.phone);
-      formData.append("status", data.status);
+      formData.append("dealer_status", data.dealer_status);
       if (data.contact_person)
         formData.append("contact_person", data.contact_person);
       if (data.email) formData.append("email", data.email);
@@ -133,7 +133,7 @@ export default function DealersDialogHandle() {
           <div>
             <label className="block text-sm font-medium mb-1">Status</label>
             <select
-              {...register("status", { required: true })}
+              {...register("dealer_status", { required: true })}
               className="w-full border rounded px-3 py-2"
             >
               <option value="active">Active</option>
