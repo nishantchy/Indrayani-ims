@@ -11,6 +11,12 @@ import TotalCategories from "./categories/TotalCategories";
 import CategoriesTable from "./tables/CategoriesTable";
 import AddCategoryDialogue from "./categories/AddCategory";
 import UpdateCategory from "./categories/UpdateCategory";
+import TotalInventoryItems from "./inventory/TotalProducts";
+import InventoryTable from "./tables/InventoryTable";
+import AddProductsDialog from "./inventory/AddProducts";
+import UpdateProductDialog from "./inventory/UpdateProduct";
+import AddStockDialog from "./inventory/AddStock";
+import SellItemDialog from "./inventory/SellItem";
 
 export {
   LoginCard,
@@ -26,4 +32,10 @@ export {
   CategoriesTable,
   AddCategoryDialogue,
   UpdateCategory,
+  TotalInventoryItems,
+  InventoryTable,
+  AddProductsDialog,
+  UpdateProductDialog,
+  AddStockDialog,
+  SellItemDialog,
 };

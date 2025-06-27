@@ -285,6 +285,12 @@ async def get_products(
         
         for product in products:
             product["_id"] = str(product["_id"])
+            # Populate category_name
+            category = await db.categories.find_one({"_id": ObjectId(product["category_id"])})
+            product["category_name"] = category["name"] if category else None
+            # Populate dealer_name
+            dealer = await db.dealers.find_one({"_id": ObjectId(product["dealer_id"])})
+            product["dealer_name"] = dealer["company_name"] if dealer else None
         
         # Add image data to all products
         await enrich_products_with_media(db, products)
@@ -313,6 +319,12 @@ async def get_product(slug: str):
                 # Add image data to cached product
                 db = await get_database()
                 await enrich_product_with_media(db, product)
+                # Populate category_name
+                category = await db.categories.find_one({"_id": ObjectId(product["category_id"])})
+                product["category_name"] = category["name"] if category else None
+                # Populate dealer_name
+                dealer = await db.dealers.find_one({"_id": ObjectId(product["dealer_id"])})
+                product["dealer_name"] = dealer["company_name"] if dealer else None
                 return product
         except Exception:
             pass
@@ -331,6 +343,13 @@ async def get_product(slug: str):
         
         # Add image data
         await enrich_product_with_media(db, product)
+        
+        # Populate category_name
+        category = await db.categories.find_one({"_id": ObjectId(product["category_id"])})
+        product["category_name"] = category["name"] if category else None
+        # Populate dealer_name
+        dealer = await db.dealers.find_one({"_id": ObjectId(product["dealer_id"])})
+        product["dealer_name"] = dealer["company_name"] if dealer else None
         
         # Cache the result
         try:

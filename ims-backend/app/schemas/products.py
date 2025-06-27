@@ -82,6 +82,9 @@ class ProductResponse(ProductBase):
     stock_updates: List[StockUpdateResponse]
     sales_history: List[SaleResponse]
     images: List[ProductImage] = []
+    created_at: Optional[datetime] = None
+    category_name: Optional[str] = None
+    dealer_name: Optional[str] = None
 
     class Config:
         populate_by_name = True

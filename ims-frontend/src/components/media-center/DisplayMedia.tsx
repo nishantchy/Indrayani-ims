@@ -109,9 +109,26 @@ export default function DisplayMedia() {
       mutate();
 
       toast.success("Media deleted successfully!");
-    } catch (error) {
+    } catch (error: any) {
+      // Try to extract backend error message
+      const backendMessage =
+        error?.response?.data?.detail ||
+        error?.response?.data?.message ||
+        error?.message;
+
+      if (
+        backendMessage &&
+        backendMessage.includes(
+          "Cannot delete media: it is used by a product or dealer"
+        )
+      ) {
+        toast.error(
+          "This image cannot be deleted because it is used by a product or dealer. Remove the reference before deleting."
+        );
+      } else {
+        toast.error("Failed to delete media. Please try again.");
+      }
       console.error("Error deleting item:", error);
-      toast.error("Failed to delete media. Please try again.");
     } finally {
       setIsDeleting(false);
     }

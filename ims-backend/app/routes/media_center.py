@@ -111,6 +111,18 @@ async def delete_media(id: str):
     media = await db.media_center.find_one({"_id": obj_id})
     if not media:
         raise HTTPException(status_code=404, detail="Media not found.")
+
+    # Prevent deletion if referenced by any product or dealer
+    # Check products
+    product_using = await db.products.find_one({"image_id": str(obj_id)})
+    # Check dealers
+    dealer_using = await db.dealers.find_one({"image_id": str(obj_id)})
+    if product_using or dealer_using:
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot delete media: it is used by a product or dealer. Remove the reference before deleting."
+        )
+
     # Delete from Cloudinary
     try:
         await delete_image(media["image_public_id"])
