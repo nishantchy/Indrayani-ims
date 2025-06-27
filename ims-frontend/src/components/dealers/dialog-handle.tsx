@@ -10,37 +10,78 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
 import { Input } from "../ui/input";
 import { Plus } from "lucide-react";
+import { useForm } from "react-hook-form";
+import MediaModel from "@/components/common/MediaModel";
+import { useMedias } from "@/services/queries";
+import { axiosInstance } from "@/services/fetcher";
+import { mutate } from "swr";
+import { toast } from "sonner";
+
+interface DealerForm {
+  company_name: string;
+  contact_person?: string;
+  phone: string;
+  email?: string;
+  address?: string;
+  gst_number?: string;
+  status: "active" | "inactive";
+  notes?: string;
+  image_id?: string;
+}
 
 export default function DealersDialogHandle() {
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({
-    company_name: "",
-    contact_person: "",
-    phone: "",
-    status: "active",
+  const [showMediaModel, setShowMediaModel] = useState(false);
+  const [selectedMedia, setSelectedMedia] = useState<any>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { data: mediaList } = useMedias();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setValue,
+    reset,
+  } = useForm<DealerForm>({
+    defaultValues: {
+      status: "active",
+    },
   });
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChooseMedia = (mediaId: string) => {
+    const mediaObj = mediaList?.find((m: any) => m.id === mediaId);
+    setSelectedMedia(mediaObj || { id: mediaId });
+    setValue("image_id", mediaId);
+    setShowMediaModel(false);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // TODO: Add submit logic here
-    setOpen(false);
+  const onSubmit = async (data: DealerForm) => {
+    setIsSubmitting(true);
+    try {
+      const formData = new FormData();
+      formData.append("company_name", data.company_name);
+      formData.append("phone", data.phone);
+      formData.append("status", data.status);
+      if (data.contact_person)
+        formData.append("contact_person", data.contact_person);
+      if (data.email) formData.append("email", data.email);
+      if (data.address) formData.append("address", data.address);
+      if (data.gst_number) formData.append("gst_number", data.gst_number);
+      if (data.notes) formData.append("notes", data.notes);
+      if (data.image_id) formData.append("image_id", data.image_id);
+      await axiosInstance.post("/api/dealers", formData);
+      toast.success("Dealer created successfully!");
+      setOpen(false);
+      reset();
+      setSelectedMedia(null);
+      mutate("/api/dealers");
+    } catch (err) {
+      toast.error("Failed to create dealer. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -54,52 +95,93 @@ export default function DealersDialogHandle() {
         <DialogHeader>
           <DialogTitle>Add New Dealer</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <Input
-            name="company_name"
-            placeholder="Company Name"
-            value={form.company_name}
-            onChange={handleChange}
-            className="w-full border rounded px-3 py-2"
-            required
+            {...register("company_name", {
+              required: "Company Name is required",
+            })}
+            placeholder="Company Name *"
+            className={errors.company_name ? "border-red-500" : ""}
+          />
+          {errors.company_name && (
+            <p className="text-sm text-red-500">
+              {errors.company_name.message}
+            </p>
+          )}
+          <Input
+            {...register("contact_person")}
+            placeholder="Contact Person (optional)"
           />
           <Input
-            name="contactPerson"
-            placeholder="Contact Person"
-            value={form.contact_person}
-            onChange={handleChange}
-            className="w-full border rounded px-3 py-2"
-            required
+            {...register("phone", { required: "Phone is required" })}
+            placeholder="Phone *"
+            className={errors.phone ? "border-red-500" : ""}
           />
+          {errors.phone && (
+            <p className="text-sm text-red-500">{errors.phone.message}</p>
+          )}
           <Input
-            name="phone"
-            placeholder="Phone"
-            value={form.phone}
-            onChange={handleChange}
-            className="w-full border rounded px-3 py-2"
-            required
+            {...register("email")}
+            placeholder="Email (optional)"
+            type="email"
           />
-          <Select>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectLabel>Status</SelectLabel>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-              </SelectGroup>
-            </SelectContent>
-          </Select>
+          <Input {...register("address")} placeholder="Address (optional)" />
+          <Input
+            {...register("gst_number")}
+            placeholder="GST Number (optional)"
+          />
+          <div>
+            <label className="block text-sm font-medium mb-1">Status</label>
+            <select
+              {...register("status", { required: true })}
+              className="w-full border rounded px-3 py-2"
+            >
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+          <Input {...register("notes")} placeholder="Notes (optional)" />
+          {/* Image selection */}
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Dealer Image (optional)
+            </label>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowMediaModel(true)}
+            >
+              Choose Image from Media Center
+            </Button>
+            {selectedMedia && selectedMedia.image_url && (
+              <div className="mt-2 flex items-center space-x-2">
+                <img
+                  src={selectedMedia.image_url}
+                  alt={selectedMedia.filename || "Selected Media"}
+                  className="w-16 h-16 object-cover rounded border"
+                />
+                <span className="text-xs text-gray-700 truncate">
+                  {selectedMedia.filename}
+                </span>
+              </div>
+            )}
+          </div>
           <DialogFooter>
-            <Button type="submit">Add Dealer</Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Adding..." : "Add Dealer"}
+            </Button>
             <DialogClose asChild>
-              <Button type="button" variant="outline">
+              <Button type="button" variant="outline" disabled={isSubmitting}>
                 Cancel
               </Button>
             </DialogClose>
           </DialogFooter>
         </form>
+        <MediaModel
+          open={showMediaModel}
+          onOpenChange={setShowMediaModel}
+          onChoose={handleChooseMedia}
+        />
       </DialogContent>
     </Dialog>
   );

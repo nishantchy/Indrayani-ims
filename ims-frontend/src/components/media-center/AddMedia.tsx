@@ -19,13 +19,23 @@ import { axiosInstance } from "@/services/fetcher";
 import { mutate } from "swr";
 import { Loader } from "@/components";
 
+interface AddMediaDialogProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
 interface FormData {
   filename: string;
   image: File | null;
 }
 
-export default function AddMediaDialog() {
-  const [open, setOpen] = useState(false);
+export default function AddMediaDialog({
+  open: controlledOpen,
+  onOpenChange,
+}: AddMediaDialogProps) {
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const open = controlledOpen !== undefined ? controlledOpen : uncontrolledOpen;
+  const setOpen = onOpenChange || setUncontrolledOpen;
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -72,22 +82,17 @@ export default function AddMediaDialog() {
     const files = e.target.files;
     if (files && files.length > 0) {
       const file = files[0];
-
       // Validate file
       const validation = validateFile(file);
       if (validation !== true) {
         return; // Let the form validation handle the error
       }
-
-      // Set the selected file
       setSelectedFile(file);
       setValue("image", file);
       clearErrors("image");
-
       // Create preview URL
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
-
       // Auto-populate filename if empty
       if (!watchedFilename) {
         const nameWithoutExtension = file.name.replace(/\.[^/.]+$/, "");
