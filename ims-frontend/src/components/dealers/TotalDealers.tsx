@@ -1,16 +1,9 @@
 "use client";
 import { useDealers } from "@/services/queries";
 import React from "react";
-import { Loader } from "@/components";
 
 export default function TotalDealers() {
-  const { data, isLoading, error } = useDealers();
-  if (isLoading)
-    return (
-      <div className="flex justify-center items-center">
-        <Loader />
-      </div>
-    );
+  const { data, error } = useDealers();
   if (error)
     return (
       <div className="flex items-center justify-center">
@@ -23,7 +16,9 @@ export default function TotalDealers() {
 
   return (
     <div className="flex justify-start items-center">
-      <p>Total Dealers: {total_dealers}</p>
+      <p className="py-2 px-3 rounded-md bg-primary-600 text-white font-semibold text-sm">
+        Total Dealers: {total_dealers}
+      </p>
     </div>
   );
 }

@@ -14,22 +14,29 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Loader } from "@/components";
 
 export function LoginCard() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    const success = login(username, password);
+    setLoading(true);
+    const success = await login(username, password);
     if (success) {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("showDashboardToast", "1");
+      }
       router.push("/dashboard");
     } else {
       setError("Invalid username or password");
     }
+    setLoading(false);
   };
 
   return (
@@ -63,6 +70,7 @@ export function LoginCard() {
               <Input
                 id="password"
                 type="password"
+                placeholder="@password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -73,8 +81,9 @@ export function LoginCard() {
             )}
           </div>
           <CardFooter className="flex-col gap-2 mt-6">
-            <Button type="submit" className="w-full">
-              Login
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? <Loader className="mr-2" /> : null}
+              {loading ? "Logging in..." : "Login"}
             </Button>
           </CardFooter>
         </form>
