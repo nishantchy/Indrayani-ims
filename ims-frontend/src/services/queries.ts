@@ -2,6 +2,7 @@ import useSWR, { SWRConfiguration } from "swr";
 import fetcher from "./fetcher";
 import { Dealer } from "@/types/dealers";
 import { MediaCenter } from "@/types/media-center";
+import { Category } from "@/types/categories";
 
 export function useDealers(config?: SWRConfiguration) {
   return useSWR<Dealer[]>("/api/dealers", fetcher, config);
@@ -37,4 +38,12 @@ export function useMedia(id: string, config?: SWRConfiguration) {
     },
     config
   );
+}
+
+export function useCategories(config?: SWRConfiguration) {
+  return useSWR<Category[]>("/api/categories", fetcher, config);
+}
+
+export function useCategory(slug: string, config?: SWRConfiguration) {
+  return useSWR<Category[]>(`/api/categories/${slug}`, fetcher, config);
 }

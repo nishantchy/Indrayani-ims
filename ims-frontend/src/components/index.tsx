@@ -7,6 +7,10 @@ import DisplayMedia from "./media-center/DisplayMedia";
 import AddMediaDialog from "./media-center/AddMedia";
 import TotalDealers from "./dealers/TotalDealers";
 import UpdateDealer from "./dealers/dealer-update";
+import TotalCategories from "./categories/TotalCategories";
+import CategoriesTable from "./tables/CategoriesTable";
+import AddCategoryDialogue from "./categories/AddCategory";
+import UpdateCategory from "./categories/UpdateCategory";
 
 export {
   LoginCard,
@@ -18,4 +22,8 @@ export {
   AddMediaDialog,
   TotalDealers,
   UpdateDealer,
+  TotalCategories,
+  CategoriesTable,
+  AddCategoryDialogue,
+  UpdateCategory,
 };

@@ -80,12 +80,12 @@ export default function DealersDetailsPage() {
 
   const imageUrl = data.images?.[0]?.image_url;
   const statusColor =
-    data.status === "active"
+    data.dealer_status === "active"
       ? "bg-emerald-50 text-emerald-700 border-emerald-200"
       : "bg-red-50 text-red-700 border-red-200";
 
   const statusIcon =
-    data.status === "active" ? (
+    data.dealer_status === "active" ? (
       <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
         <path
           fillRule="evenodd"
@@ -121,7 +121,8 @@ export default function DealersDetailsPage() {
               className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium border ${statusColor}`}
             >
               {statusIcon}
-              {data.status.charAt(0).toUpperCase() + data.status.slice(1)}
+              {data.dealer_status.charAt(0).toUpperCase() +
+                data.dealer_status.slice(1)}
             </div>
           </div>
         </div>
