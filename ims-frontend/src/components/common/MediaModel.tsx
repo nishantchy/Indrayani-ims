@@ -92,18 +92,26 @@ export default function MediaModel({
           </div>
         )}
         <DialogFooter className="mt-4 flex flex-row gap-2 justify-end">
-          <Button
+          {/* <Button
             onClick={() => setShowAddDialog(true)}
             variant="secondary"
             size="sm"
           >
             Add New Media
-          </Button>
-          <Button onClick={handleChoose} disabled={!selectedMediaId} size="sm">
+          </Button> */}
+          <AddMediaDialog
+            open={showAddDialog}
+            onOpenChange={setShowAddDialog}
+          />
+          <Button
+            onClick={handleChoose}
+            disabled={!selectedMediaId}
+            size="default"
+          >
             Choose
           </Button>
           <DialogClose asChild>
-            <Button type="button" variant="outline" size="sm">
+            <Button type="button" variant="outline" size="default">
               Cancel
             </Button>
           </DialogClose>
