@@ -3,5 +3,17 @@ import Navbar from "./common/Navbar";
 import { AppSidebar } from "./common/app-sidebar";
 import DealersTable from "./tables/DealersTable";
 import Loader from "./common/Loader";
+import DealersDialogHandle from "./dealers/dialog-handle";
+import DisplayMedia from "./media-center/DisplayMedia";
+import AddMediaDialog from "./media-center/AddMedia";
 
-export { LoginCard, Navbar, AppSidebar, DealersTable, Loader };
+export {
+  LoginCard,
+  Navbar,
+  AppSidebar,
+  DealersTable,
+  Loader,
+  DealersDialogHandle,
+  DisplayMedia,
+  AddMediaDialog,
+};

@@ -19,12 +19,6 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import sidelinks from "@/lib/constants/side-links";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
 
 export function AppSidebar() {
   return (

@@ -33,10 +33,14 @@ export function LoginCard() {
   };
 
   return (
-    <Card className="w-full max-w-sm">
+    <Card className="w-full max-w-lg">
       <CardHeader>
-        <CardTitle>Login to your account</CardTitle>
-        <CardDescription>Enter your credentials to login</CardDescription>
+        <CardTitle className="flex justify-center items-center text-2xl font-semibold">
+          Login to your account
+        </CardTitle>
+        <CardDescription className="flex justify-center items-center">
+          Enter your credentials to login
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit}>

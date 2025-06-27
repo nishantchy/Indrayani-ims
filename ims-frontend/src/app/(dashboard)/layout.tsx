@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "../globals.css";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,9 +33,10 @@ export default function DashboardLayout({
       >
         <SidebarProvider>
           <AppSidebar />
-          <main className="max-w-screen-2xl w-full mx-auto min-h-screen px-4">
+          <main className="max-w-screen-2xl w-full mx-auto">
             <SidebarTrigger />
             {children}
+            <Toaster />
           </main>
         </SidebarProvider>
       </body>
