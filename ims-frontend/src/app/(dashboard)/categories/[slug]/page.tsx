@@ -5,6 +5,14 @@ import { useParams } from "next/navigation";
 import React from "react";
 import { Category } from "@/types/categories";
 
+// This function is required for static export with dynamic routes
+export async function generateStaticParams() {
+  // For static export, we need to return an empty array or known slugs
+  // Since we don't know all possible slugs at build time, we'll return empty
+  // The page will be generated on-demand when accessed
+  return [];
+}
+
 export default function CategoryDetailsPage() {
   const params = useParams();
   const slug = params?.slug as string | undefined;
