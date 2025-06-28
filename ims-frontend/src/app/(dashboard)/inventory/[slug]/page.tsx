@@ -1,4 +1,4 @@
-import ProductDetailsClient from "../../../../components/inventory/ProductDetailsClient";
+import { ProductDetailsClient } from "@/components";
 
 // This function is required for static export with dynamic routes
 export async function generateStaticParams() {
@@ -8,10 +8,11 @@ export async function generateStaticParams() {
   return [];
 }
 
-export default function ProductDetailPage({
+export default async function ProductDetailPage({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
-  return <ProductDetailsClient slug={params.slug} />;
+  const resolvedParams = await params;
+  return <ProductDetailsClient slug={resolvedParams.slug} />;
 }
