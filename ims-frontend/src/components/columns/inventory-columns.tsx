@@ -26,7 +26,7 @@ import { mutate } from "swr";
 import { toast } from "sonner";
 import Image from "next/image";
 import { UpdateProductDialog, AddStockDialog } from "@/components";
-import SellItemDialog from "../SellItemDialog";
+import SellItemDialog from "../inventory/SellItemDialog";
 
 export const inventoryColumns: ColumnDef<Inventory>[] = [
   {

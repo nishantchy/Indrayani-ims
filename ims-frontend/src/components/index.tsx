@@ -17,6 +17,9 @@ import AddProductsDialog from "./inventory/AddProducts";
 import UpdateProductDialog from "./inventory/UpdateProduct";
 import AddStockDialog from "./inventory/AddStock";
 import SellItemDialog from "./inventory/SellItem";
+import CategoryDetailsClient from "./categories/CategoryDetailsClient";
+import DealerDetailsClient from "./dealers/DealerDetailsClient";
+import ProductDetailsClient from "./inventory/ProductDetailsClient";
 
 export {
   LoginCard,
@@ -38,4 +41,7 @@ export {
   UpdateProductDialog,
   AddStockDialog,
   SellItemDialog,
+  CategoryDetailsClient,
+  DealerDetailsClient,
+  ProductDetailsClient,
 };

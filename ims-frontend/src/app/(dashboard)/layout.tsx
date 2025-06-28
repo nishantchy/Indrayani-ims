@@ -5,6 +5,7 @@ import "../globals.css";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components";
 import { Toaster } from "@/components/ui/sonner";
+import AuthGuard from "@/components/auth/AuthGuard";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,14 +32,16 @@ export default function DashboardLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50`}
       >
-        <SidebarProvider>
-          <AppSidebar />
-          <main className="max-w-screen-2xl w-full mx-auto">
-            <SidebarTrigger />
-            {children}
-            <Toaster />
-          </main>
-        </SidebarProvider>
+        <AuthGuard>
+          <SidebarProvider>
+            <AppSidebar />
+            <main className="max-w-screen-2xl w-full mx-auto">
+              <SidebarTrigger />
+              {children}
+              <Toaster />
+            </main>
+          </SidebarProvider>
+        </AuthGuard>
       </body>
     </html>
   );
