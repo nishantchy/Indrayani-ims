@@ -1,5 +1,6 @@
 import { DisplayMedia, AddMediaDialog } from "@/components";
-import React from "react";
+import React, { Suspense } from "react";
+import { Loader } from "@/components";
 
 export default function MediaCenterPage() {
   return (
@@ -7,7 +8,15 @@ export default function MediaCenterPage() {
       <div className="flex justify-end items-center mb-4">
         <AddMediaDialog />
       </div>
-      <DisplayMedia />
+      <Suspense
+        fallback={
+          <div className="flex justify-center items-center p-8">
+            <Loader />
+          </div>
+        }
+      >
+        <DisplayMedia />
+      </Suspense>
     </div>
   );
 }

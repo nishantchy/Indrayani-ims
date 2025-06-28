@@ -1,9 +1,5 @@
 import { CategoryDetailsClient } from "@/components";
 
-export async function generateStaticParams() {
-  return [];
-}
-
 export default async function CategoryDetailsPage({
   params,
 }: {
