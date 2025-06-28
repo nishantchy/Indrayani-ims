@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "ims-frontend/**"
+      - ".github/workflows/*frontend*"
   pull_request:
     branches: [main]
     paths:
@@ -23,6 +24,9 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./ims-frontend
 
     steps:
       - name: Checkout
@@ -39,26 +43,21 @@ jobs:
         uses: actions/configure-pages@v4
 
       - name: Install dependencies
-        working-directory: ./ims-frontend
         run: npm ci
 
       - name: Create .env file
-        working-directory: ./ims-frontend
         run: |
           echo "BASE_URL=${{ secrets.BASE_URL }}" > .env.local
           echo "NEXT_PUBLIC_ADMIN_USER=${{ secrets.NEXT_PUBLIC_ADMIN_USER }}" >> .env.local
           echo "NEXT_PUBLIC_ADMIN_PASS=${{ secrets.NEXT_PUBLIC_ADMIN_PASS }}" >> .env.local
 
       - name: Build with Next.js
-        working-directory: ./ims-frontend
         run: npm run build
 
       - name: Add .nojekyll file
-        working-directory: ./ims-frontend
         run: touch out/.nojekyll
 
       - name: List build output (debug)
-        working-directory: ./ims-frontend
         run: |
           echo "Contents of out directory:"
           ls -la out/
