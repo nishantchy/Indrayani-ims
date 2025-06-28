@@ -1,4 +1,4 @@
-import { ProductDetailsClient } from "@/components";
+import ProductDetailsClient from "../../../../components/inventory/ProductDetailsClient";
 
 // This function is required for static export with dynamic routes
 export async function generateStaticParams() {
