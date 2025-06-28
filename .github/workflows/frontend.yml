@@ -53,6 +53,18 @@ jobs:
         working-directory: ./ims-frontend
         run: npm run build
 
+      - name: Add .nojekyll file
+        working-directory: ./ims-frontend
+        run: touch out/.nojekyll
+
+      - name: List build output (debug)
+        working-directory: ./ims-frontend
+        run: |
+          echo "Contents of out directory:"
+          ls -la out/
+          echo "Checking for index.html:"
+          ls -la out/index.html || echo "index.html not found!"
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
