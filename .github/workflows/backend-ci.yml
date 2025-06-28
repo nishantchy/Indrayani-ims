@@ -8,6 +8,7 @@ on:
     branches: [main]
     paths:
       - "ims-backend/**"
+  workflow_dispatch:
 
 jobs:
   test-and-build:
